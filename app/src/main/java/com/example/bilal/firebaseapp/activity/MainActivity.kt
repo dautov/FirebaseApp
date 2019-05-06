@@ -3,11 +3,12 @@ package com.example.bilal.firebaseapp.activity
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import com.example.bilal.firebaseapp.R
+import com.example.bilal.firebaseapp.adapters.SohbetOdasiRecyclerViewAdapter
 import com.example.bilal.firebaseapp.dialog.YeniSohbetOdasiDialogFragment
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.model.SohbetOdasi
@@ -36,9 +37,9 @@ class MainActivity : AppCompatActivity() {
     fun init(){
         tumSohbetOdalariniGetir()
         //Toast.makeText(this@MainActivity,"Selam Bro",Toast.LENGTH_SHORT).show()
-        floatingActionButton.setOnClickListener {
+        floatingActionButtonSohbet.setOnClickListener {
             var dialog = YeniSohbetOdasiDialogFragment()
-            dialog.show(supportFragmentManager,"gostrer")
+            dialog.show(supportFragmentManager,"goster")
         }
     }
 
@@ -84,12 +85,25 @@ class MainActivity : AppCompatActivity() {
 
                 }
 
-                Toast.makeText(this@MainActivity,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
-
+               // Toast.makeText(this@MainActivity,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
+                sohbetOdalariListele()
             }
 
         })
 
+    }
+
+    private fun sohbetOdalariListele(){
+        var MyAdapter = SohbetOdasiRecyclerViewAdapter(this@MainActivity,tumSohbetOdalari)
+        rvSohbetListesi.adapter = MyAdapter
+        rvSohbetListesi.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
+    }
+
+    fun sohbetOdasiSil(silinecekSohbetOdaID : String){
+        var ref = FirebaseDatabase.getInstance().reference
+        ref.child("sohbet_odasi")
+            .child(silinecekSohbetOdaID).removeValue()
+        init()
     }
 
 

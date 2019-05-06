@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
 import com.example.bilal.firebaseapp.R
+import com.example.bilal.firebaseapp.adapters.SohbetOdasiRecyclerViewAdapter
 import com.example.bilal.firebaseapp.dialog.YeniSohbetOdasiDialogFragment
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.model.SohbetOdasi
@@ -30,16 +31,16 @@ class SohbetActivty : AppCompatActivity() {
         //window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_sohbet_activty)
 
-        init()
+       // init()
 
     }
 
     fun init(){
-        //tumSohbetOdalariniGetir()
-        Toast.makeText(this@SohbetActivty,"Selam Bro",Toast.LENGTH_SHORT).show()
+        tumSohbetOdalariniGetir()
+        //Toast.makeText(this@SohbetActivty,"Selam Bro",Toast.LENGTH_SHORT).show()
         fbtnSohbetOlustur.setOnClickListener {
             var dialog =YeniSohbetOdasiDialogFragment()
-            dialog.show(supportFragmentManager,"gsoteryenisohbetfragmenti")
+            dialog.show(supportFragmentManager,"goster")
         }
 
 
@@ -86,13 +87,30 @@ class SohbetActivty : AppCompatActivity() {
 
                 }
 
-               Toast.makeText(this@SohbetActivty,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
+               //Toast.makeText(this@SohbetActivty,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
+
+               sohbetOdalariListele()
 
             }
 
         })
 
     }
+
+    private fun sohbetOdalariListele(){
+        //Toast.makeText(this@SohbetActivty,"Listeleme Yapiliyor : " + tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
+        var MyAdapter = SohbetOdasiRecyclerViewAdapter(this@SohbetActivty,tumSohbetOdalari)
+        rvSohbetler.adapter = MyAdapter
+        rvSohbetler.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
+    }
+
+
+     /*fun sohbetOdasiSil(silinecekSohbetOdaID : String){
+         var ref = FirebaseDatabase.getInstance().reference
+          ref.child("sohbet_odasi")
+              .child(silinecekSohbetOdaID).removeValue()
+
+    }*/
 
 
 
