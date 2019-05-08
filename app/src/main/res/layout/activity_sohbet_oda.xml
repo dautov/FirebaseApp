@@ -7,4 +7,35 @@
         android:layout_height="match_parent"
         tools:context=".activity.SohbetOdaActivity">
 
+    <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp" app:srcCompat="@drawable/ic_action_send"
+            android:id="@+id/imgMesajYolla"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    <EditText
+            android:layout_width="289dp"
+            android:layout_height="48dp"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/etMesaj"
+            app:layout_constraintStart_toEndOf="@+id/imgDosyaSec"
+            android:layout_marginStart="8dp" android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toStartOf="@+id/imgMesajYolla" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.545"/>
+    <android.support.v7.widget.RecyclerView
+            android:layout_width="395dp"
+            android:layout_height="652dp"
+            android:id="@+id/recyclerView" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/etMesaj" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp" android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"/>
+    <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp" app:srcCompat="@drawable/ic_action_add"
+            android:id="@+id/imgDosyaSec"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"/>
 </android.support.constraint.ConstraintLayout>

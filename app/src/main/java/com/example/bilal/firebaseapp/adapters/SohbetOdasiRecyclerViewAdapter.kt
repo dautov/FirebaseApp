@@ -3,6 +3,7 @@ package com.example.bilal.firebaseapp.adapters
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
+import android.content.Intent
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -23,6 +24,7 @@ import kotlinx.android.synthetic.main.satir_sohbet_oda.view.*
 import android.support.v7.app.AppCompatActivity
 import com.example.bilal.firebaseapp.activity.MainActivity
 import com.example.bilal.firebaseapp.activity.SohbetActivty
+import com.example.bilal.firebaseapp.activity.SohbetOdaActivity
 import java.text.FieldPosition
 
 class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdalari:ArrayList<SohbetOdasi>) : RecyclerView.Adapter<SohbetOdasiRecyclerViewAdapter.SohbetOdasiHolder>() {
@@ -85,6 +87,16 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
                 }
 
             }
+
+            tekSatirSohbetOdasi.setOnClickListener {
+                var intent = Intent(myActivity,SohbetOdaActivity::class.java)
+                //tıklanan odanın ID sini SohbetOdaActvity ye yollar
+                intent.putExtra("sohbet_odasi_id",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
+                myActivity.startActivity(intent)
+
+            }
+
+
 
             var ref = FirebaseDatabase.getInstance().reference
             var sorgu = ref.child("kullanici")
