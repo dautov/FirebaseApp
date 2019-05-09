@@ -53,6 +53,8 @@ class SohbetMesajRecyclerViewAdapter(context: Context,tumMesajlar:ArrayList<Meti
 
             if (!oAnkiMesaj.profil_resmi.isNullOrEmpty()){
                 Picasso.get().load(oAnkiMesaj.profil_resmi).resize(48,48).into(profilResim)
+            }else{
+                Picasso.get().load(R.drawable.ic_action_user).resize(48,48).into(profilResim)
             }
 
 

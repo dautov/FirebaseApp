@@ -303,7 +303,12 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                     etKullaniciAdi.setText(bilgi?.isim)
                     etEmail.setText(bilgi?.mail)
                     etTelefon.setText(bilgi?.telefon)
-                    Picasso.get().load(bilgi?.profil_resmi).resize(100,100).into(imgProfil)
+                    if (!bilgi?.profil_resmi.isNullOrEmpty()){
+                        Picasso.get().load(bilgi?.profil_resmi).resize(100,100).into(imgProfil)
+                    }else {
+                        Picasso.get().load(R.drawable.ic_action_user).resize(100,100).into(imgProfil)
+                    }
+
                 }
             }
 

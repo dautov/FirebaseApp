@@ -13,6 +13,9 @@ import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_sohbet_oda.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.HashSet
 
 class SohbetOdaActivity : AppCompatActivity() {
 
@@ -21,6 +24,8 @@ class SohbetOdaActivity : AppCompatActivity() {
     var secilenSohbetOdaID : String = ""
     var mMesajReferans : DatabaseReference? = null
     var mAdapter : SohbetMesajRecyclerViewAdapter? = null
+
+    var mesajIDSet : HashSet<String>? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +36,38 @@ class SohbetOdaActivity : AppCompatActivity() {
 
         //tıklanan odanın ID si
         SohbetOdasiIDGetir()
+        init()
 
+    }
+
+    private fun init(){
+        etMesaj.setOnClickListener{
+            rvMesaj.smoothScrollToPosition(mAdapter!!.itemCount-1)
+        }
+
+        imgMesajYolla.setOnClickListener {
+            if (!etMesaj.text.toString().equals("")){
+                var yazilanMesaj = etMesaj.text.toString()
+                var kaydedilecekMesaj = MetinMesaj()
+                kaydedilecekMesaj.mesaj = yazilanMesaj
+                kaydedilecekMesaj.kullanici_id = FirebaseAuth.getInstance().currentUser?.uid
+                kaydedilecekMesaj.zaman=getMesajTarih()
+
+                var ref = FirebaseDatabase.getInstance().reference
+                    .child("sohbet_odasi").child(secilenSohbetOdaID).child("sohbet_oda_mesaj")
+
+                var yenimesajID = ref.push().key
+                ref.child(yenimesajID!!)
+                    .setValue(kaydedilecekMesaj)
+
+                etMesaj.setText("")
+            }
+        }
+    }
+
+    private fun getMesajTarih(): String? {
+        var sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale("tr"))
+        return sdf.format(Date())
     }
 
     private fun SohbetOdasiIDGetir() {
@@ -56,6 +92,7 @@ class SohbetOdaActivity : AppCompatActivity() {
         //burda bellekte yer aaçıyorum
         if (tumMesajlar == null){
             tumMesajlar=ArrayList<MetinMesaj>()
+            mesajIDSet = HashSet<String>()
         }
 
         mMesajReferans = FirebaseDatabase.getInstance().reference
@@ -69,39 +106,47 @@ class SohbetOdaActivity : AppCompatActivity() {
                     for (mesaj in p0.children){
                         var yeniMesaj = MetinMesaj()
                         var kullaniciID = mesaj.getValue(MetinMesaj::class.java)!!.kullanici_id
-                        if (kullaniciID != null){
-                            yeniMesaj.kullanici_id = mesaj.getValue(MetinMesaj::class.java)!!.kullanici_id
-                            yeniMesaj.mesaj = mesaj.getValue(MetinMesaj::class.java)!!.mesaj
-                            yeniMesaj.zaman = mesaj.getValue(MetinMesaj::class.java)!!.zaman
 
-                            var kullaniciBilgileri = mMesajReferans?.child("kullanici")?.orderByKey()?.equalTo(kullaniciID)
-                            kullaniciBilgileri?.addListenerForSingleValueEvent(object : ValueEventListener{
-                                override fun onCancelled(p0: DatabaseError) {
+                        if (!mesajIDSet!!.contains(mesaj.key)){
+                            mesajIDSet!!.add(mesaj.key!!)
+                            if (kullaniciID != null){
+                                yeniMesaj.kullanici_id = mesaj.getValue(MetinMesaj::class.java)!!.kullanici_id
+                                yeniMesaj.mesaj = mesaj.getValue(MetinMesaj::class.java)!!.mesaj
+                                yeniMesaj.zaman = mesaj.getValue(MetinMesaj::class.java)!!.zaman
 
-                                }
+                                var kullaniciBilgileri = mMesajReferans?.child("kullanici")?.orderByKey()?.equalTo(kullaniciID)
+                                kullaniciBilgileri?.addListenerForSingleValueEvent(object : ValueEventListener{
+                                    override fun onCancelled(p0: DatabaseError) {
 
-                                override fun onDataChange(p0: DataSnapshot) {
-                                    //bulunan kullanici
-                                    var kulllanici = p0?.children.iterator().next()
-                                    yeniMesaj.profil_resmi = kulllanici.getValue(Kullanici::class.java)!!.profil_resmi
-                                    yeniMesaj.adi = kulllanici.getValue(Kullanici::class.java)!!.isim
-                                }
+                                    }
 
-                            })
+                                    override fun onDataChange(p0: DataSnapshot) {
+                                        //bulunan kullanici
+                                        var kulllanici = p0?.children.iterator().next()
+                                        yeniMesaj.profil_resmi = kulllanici.getValue(Kullanici::class.java)!!.profil_resmi
+                                        yeniMesaj.adi = kulllanici.getValue(Kullanici::class.java)!!.isim
+                                    }
 
-
-                            tumMesajlar?.add(yeniMesaj)
-
-                            mAdapter?.notifyDataSetChanged()
+                                })
 
 
-                        }else {
-                            yeniMesaj.mesaj = mesaj.getValue(MetinMesaj::class.java)!!.mesaj
-                            yeniMesaj.zaman = mesaj.getValue(MetinMesaj::class.java)!!.zaman
-                            yeniMesaj.profil_resmi = ""
-                            yeniMesaj.adi = ""
-                            tumMesajlar?.add(yeniMesaj)
+                                tumMesajlar?.add(yeniMesaj)
+
+                                mAdapter?.notifyDataSetChanged()
+
+                                rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
+
+
+                            }else {
+                                yeniMesaj.mesaj = mesaj.getValue(MetinMesaj::class.java)!!.mesaj
+                                yeniMesaj.zaman = mesaj.getValue(MetinMesaj::class.java)!!.zaman
+                                yeniMesaj.profil_resmi = ""
+                                yeniMesaj.adi = ""
+                                tumMesajlar?.add(yeniMesaj)
+                            }
                         }
+
+
                     }
                 }
 

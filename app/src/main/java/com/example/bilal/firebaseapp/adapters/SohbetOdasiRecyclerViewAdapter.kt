@@ -112,7 +112,12 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
                             sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
 
                             var profil = kullanici.getValue(Kullanici::class.java)!!.profil_resmi.toString()
-                            Picasso.get().load(profil).into(sohbetOdasiResim)
+                            if (profil.isNullOrEmpty() or profil.isNullOrBlank()){
+                                Picasso.get().load(R.drawable.ic_action_user).resize(72,72).into(sohbetOdasiResim)
+                            }else{
+                                Picasso.get().load(profil).resize(72,72).into(sohbetOdasiResim)
+                            }
+
 
 
                         }
