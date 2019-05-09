@@ -3,9 +3,11 @@ package com.example.bilal.firebaseapp.adapters
 import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.R
 import com.squareup.picasso.Picasso
@@ -25,8 +27,9 @@ class SohbetMesajRecyclerViewAdapter(context: Context,tumMesajlar:ArrayList<Meti
     }
 
     override fun getItemCount(): Int {
-
+        Log.e("MesajSayisiTest",myTumMesajlar.size.toString())
         return myTumMesajlar.size
+
     }
 
     override fun onBindViewHolder(p0: SohbetMesajViewHolder, p1: Int) {

@@ -91,7 +91,8 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
             tekSatirSohbetOdasi.setOnClickListener {
                 var intent = Intent(myActivity,SohbetOdaActivity::class.java)
                 //tıklanan odanın ID sini SohbetOdaActvity ye yollar
-                intent.putExtra("sohbet_odasi_id",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
+                intent.putExtra("sohbetodasi_id",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
+                Log.e("SecilenOdaID TEst",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
                 myActivity.startActivity(intent)
 
             }
