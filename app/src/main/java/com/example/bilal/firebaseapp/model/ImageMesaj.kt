@@ -1,15 +1,6 @@
 package com.example.bilal.firebaseapp.model
 
-import java.util.*
-
-class MetinMesaj {
-
-    /*companion object {
-        const val Text_Mes = 1
-        const val IMG_MES = 2
-        const val PDF_MES =3
-    }*/
-
+class ImageMesaj {
     var mesaj: String? = null
     var kullanici_id: String? = null
     var zaman: String? = null

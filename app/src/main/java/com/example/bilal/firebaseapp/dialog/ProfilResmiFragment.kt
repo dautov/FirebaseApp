@@ -41,7 +41,7 @@ class ProfilResmiFragment : DialogFragment() {
     ): View? {
         var v = inflater.inflate(R.layout.fragment_profil_resmi, container, false)
 
-        tvGaleridenSec = v.findViewById(R.id.tvGaleri)
+        tvGaleridenSec = v.findViewById(R.id.tvGaleriden)
         tvKameraCek = v.findViewById(R.id.tvKamera)
 
         tvGaleridenSec.setOnClickListener {

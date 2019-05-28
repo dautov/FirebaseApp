@@ -13,22 +13,23 @@ import com.example.bilal.firebaseapp.dialog.YeniSohbetOdasiDialogFragment
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.model.SohbetOdasi
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var mAuthStateListener: FirebaseAuth.AuthStateListener
-    lateinit var tumSohbetOdalari:ArrayList<SohbetOdasi>
+    var tumSohbetOdalari:ArrayList<SohbetOdasi>? = null
+    var mSohbetOdasiReferans: DatabaseReference? = null
+    var sohbetOdasiIDSet: HashSet<String>? = null
+    var mAdapter : SohbetOdasiRecyclerViewAdapter?  = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initMyAuthStateListener()
+        sohbetOdaListener()
         init()
 
 
@@ -42,10 +43,34 @@ class MainActivity : AppCompatActivity() {
             dialog.show(supportFragmentManager,"goster")
         }
     }
+    //
+    var mValueEventListener : ValueEventListener = object : ValueEventListener {
+        override fun onCancelled(p0: DatabaseError) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onDataChange(p0: DataSnapshot) {
+            mAdapter?.notifyDataSetChanged()
+            tumSohbetOdalariniGetir()
+        }
+
+    }
+
+    //listener
+    private fun sohbetOdaListener(){
+        mSohbetOdasiReferans = FirebaseDatabase.getInstance().reference.child("sohbet_odasi")
+
+        mSohbetOdasiReferans!!.addValueEventListener(mValueEventListener)
+    }
 
     private fun tumSohbetOdalariniGetir(){
 
-        tumSohbetOdalari = ArrayList<SohbetOdasi>() //boş array list
+        if (tumSohbetOdalari == null){
+            tumSohbetOdalari = ArrayList<SohbetOdasi>()
+            sohbetOdasiIDSet = HashSet<String>()
+        }
+
+        //tumSohbetOdalari = ArrayList<SohbetOdasi>() //boş array list
 
         var ref = FirebaseDatabase.getInstance().reference
 
@@ -59,43 +84,59 @@ class MainActivity : AppCompatActivity() {
 
 
                 for (tekSohbetOdasi in p0.children){
+                    //Log.e("Geln Oda ",p0.toString())
+                    //Log.e("Oda ID ",tekSohbetOdasi.key.toString())
+                    if (!sohbetOdasiIDSet!!.contains(tekSohbetOdasi.key)){
+                        sohbetOdasiIDSet!!.add(tekSohbetOdasi.key!!)
 
-                    var oAnkiSohbetOdasi = SohbetOdasi()
-                    var nesneMap = (tekSohbetOdasi.getValue() as HashMap<String,Object>)
-                    oAnkiSohbetOdasi.olusturan_id = nesneMap.get("olusturan_id").toString()
-                    oAnkiSohbetOdasi.sohbetodasi_adi= nesneMap.get("sohbetodasi_adi").toString()
-                    oAnkiSohbetOdasi.sohbetodasi_id = nesneMap.get("sohbetodasi_id").toString()
+                        var oAnkiSohbetOdasi = SohbetOdasi()
+                        var nesneMap = (tekSohbetOdasi.getValue() as HashMap<String,Object>)
+                        oAnkiSohbetOdasi.olusturan_id = nesneMap.get("olusturan_id").toString()
+                        oAnkiSohbetOdasi.sohbetodasi_adi= nesneMap.get("sohbetodasi_adi").toString()
+                        oAnkiSohbetOdasi.sohbetodasi_id = nesneMap.get("sohbetodasi_id").toString()
 
-                    var tumMesajlar = ArrayList<MetinMesaj>()
-                    for (mesajlar in tekSohbetOdasi.child("sohbet_oda_mesaj").children){
-                        var okunanMesaj = MetinMesaj()
-                        okunanMesaj.zaman = mesajlar.getValue(MetinMesaj::class.java)?.zaman
-                        okunanMesaj.kullanici_id = mesajlar.getValue(MetinMesaj::class.java)?.kullanici_id
-                        okunanMesaj.adi = mesajlar.getValue(MetinMesaj::class.java)?.adi
-                        okunanMesaj.profil_resmi =mesajlar.getValue(MetinMesaj::class.java)?.profil_resmi
-                        okunanMesaj.mesaj = mesajlar.getValue(MetinMesaj::class.java)?.mesaj
+                        var tumMesajlar = ArrayList<MetinMesaj>()
+                        for (mesajlar in tekSohbetOdasi.child("sohbet_oda_mesaj").children){
+                            var okunanMesaj = MetinMesaj()
+                            okunanMesaj.zaman = mesajlar.getValue(MetinMesaj::class.java)?.zaman
+                            okunanMesaj.kullanici_id = mesajlar.getValue(MetinMesaj::class.java)?.kullanici_id
+                            okunanMesaj.adi = mesajlar.getValue(MetinMesaj::class.java)?.adi
+                            okunanMesaj.profil_resmi =mesajlar.getValue(MetinMesaj::class.java)?.profil_resmi
+                            okunanMesaj.mesaj = mesajlar.getValue(MetinMesaj::class.java)?.mesaj
+                            //okunanMesaj.type = mesajlar.getValue(MetinMesaj::class.java)?.type
 
-                        tumMesajlar.add(okunanMesaj)
+                            tumMesajlar.add(okunanMesaj)
+                            mAdapter?.notifyDataSetChanged()
 
+                        }
+
+                        oAnkiSohbetOdasi.sohbet_oda_mesaj= tumMesajlar
+                        tumSohbetOdalari!!.add(oAnkiSohbetOdasi)
+                        Log.e("TestSohbetOdalar",oAnkiSohbetOdasi.sohbetodasi_adi)
+
+                        mAdapter?.notifyDataSetChanged()
                     }
 
-                    oAnkiSohbetOdasi.sohbet_oda_mesaj= tumMesajlar
-                    tumSohbetOdalari.add(oAnkiSohbetOdasi)
-                    Log.e("TestSohbetOdalar",oAnkiSohbetOdasi.sohbetodasi_adi)
+
+
 
                 }
 
                // Toast.makeText(this@MainActivity,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
-                sohbetOdalariListele()
+                if (mAdapter == null){
+                    sohbetOdalariListele()
+                }
+
             }
 
         })
 
+
     }
 
     private fun sohbetOdalariListele(){
-        var MyAdapter = SohbetOdasiRecyclerViewAdapter(this@MainActivity,tumSohbetOdalari)
-        rvSohbetListesi.adapter = MyAdapter
+         mAdapter = SohbetOdasiRecyclerViewAdapter(this@MainActivity,tumSohbetOdalari!!)
+        rvSohbetListesi.adapter = mAdapter
         rvSohbetListesi.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
     }
 
@@ -193,3 +234,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 }
+
+
+

@@ -44,7 +44,7 @@ class YeniSohbetOdasiDialogFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        var view = inflater!!.inflate(R.layout.fragment_yeni_sohbet_odasi_dialog, container, false)
+        var view = inflater.inflate(R.layout.fragment_yeni_sohbet_odasi_dialog, container, false)
 
         etsohbetOdasiAdi = view.findViewById(R.id.etYeniSohbetOdasiAdi)
         btnSohbetOdasiOlustur =view.findViewById(R.id.btnYeniOdaOlustur)
@@ -67,7 +67,8 @@ class YeniSohbetOdasiDialogFragment : DialogFragment() {
 
                 var metinMesajID = ref.child("sohbet_odasi").push().key
                 var karsilamaMesaj = MetinMesaj()
-                karsilamaMesaj.mesaj = "Sohbet Odasina hoşgeldin Beybisi"
+                karsilamaMesaj.mesaj = "Sohbet Odasina hoşgeldiniz"
+                karsilamaMesaj.type = 1
                 karsilamaMesaj.zaman = getDate()
 
                 ref.child("sohbet_odasi")

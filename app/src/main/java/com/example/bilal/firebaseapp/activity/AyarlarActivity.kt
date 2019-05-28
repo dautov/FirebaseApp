@@ -41,7 +41,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
 
     override fun getResimYol(resimPath: Uri?) {
         galeridenGlenUri = resimPath
-        Picasso.get().load(galeridenGlenUri).into(imgProfil)
+        Picasso.get().load(galeridenGlenUri).resize(100,100).into(imgProfil)
 
     }
 
