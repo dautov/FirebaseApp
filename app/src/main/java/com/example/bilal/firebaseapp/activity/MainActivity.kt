@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import com.example.bilal.firebaseapp.R
 import com.example.bilal.firebaseapp.adapters.SohbetOdasiRecyclerViewAdapter
 import com.example.bilal.firebaseapp.dialog.YeniSohbetOdasiDialogFragment
@@ -33,6 +34,10 @@ class MainActivity : AppCompatActivity() {
         init()
 
 
+
+
+
+
     }
 
     fun init(){
@@ -47,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     var mValueEventListener : ValueEventListener = object : ValueEventListener {
         override fun onCancelled(p0: DatabaseError) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            FirebaseAuth.getInstance().signOut()
         }
 
         override fun onDataChange(p0: DataSnapshot) {
@@ -80,20 +86,29 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onDataChange(p0: DataSnapshot) {
-
-
-
                 for (tekSohbetOdasi in p0.children){
                     //Log.e("Geln Oda ",p0.toString())
-                    //Log.e("Oda ID ",tekSohbetOdasi.key.toString())
+                    Log.e("Oda ID ",tekSohbetOdasi.key.toString())
                     if (!sohbetOdasiIDSet!!.contains(tekSohbetOdasi.key)){
                         sohbetOdasiIDSet!!.add(tekSohbetOdasi.key!!)
 
                         var oAnkiSohbetOdasi = SohbetOdasi()
+                        var privateTest = SohbetOdasi()
                         var nesneMap = (tekSohbetOdasi.getValue() as HashMap<String,Object>)
+                        Log.e("Oda ID ",nesneMap.get("olusturan_id").toString())
                         oAnkiSohbetOdasi.olusturan_id = nesneMap.get("olusturan_id").toString()
                         oAnkiSohbetOdasi.sohbetodasi_adi= nesneMap.get("sohbetodasi_adi").toString()
                         oAnkiSohbetOdasi.sohbetodasi_id = nesneMap.get("sohbetodasi_id").toString()
+                        oAnkiSohbetOdasi.karsi_kisi_id = nesneMap.get("karsi_kisi_id").toString()
+                        oAnkiSohbetOdasi.durum = nesneMap.get("durum").toString()
+
+
+                        var olusturan = oAnkiSohbetOdasi.olusturan_id
+                        var karsi = oAnkiSohbetOdasi.karsi_kisi_id
+
+
+                        privateTest.olusturan_id = nesneMap.get("olusturan_id").toString()
+                        Log.e("olusturanTest",privateTest.olusturan_id.toString())
 
                         var tumMesajlar = ArrayList<MetinMesaj>()
                         for (mesajlar in tekSohbetOdasi.child("sohbet_oda_mesaj").children){
@@ -103,7 +118,8 @@ class MainActivity : AppCompatActivity() {
                             okunanMesaj.adi = mesajlar.getValue(MetinMesaj::class.java)?.adi
                             okunanMesaj.profil_resmi =mesajlar.getValue(MetinMesaj::class.java)?.profil_resmi
                             okunanMesaj.mesaj = mesajlar.getValue(MetinMesaj::class.java)?.mesaj
-                            //okunanMesaj.type = mesajlar.getValue(MetinMesaj::class.java)?.type
+                            okunanMesaj.type = mesajlar.getValue(MetinMesaj::class.java)?.type
+                            okunanMesaj.belge_adi = mesajlar.getValue(MetinMesaj::class.java)?.belge_adi
 
                             tumMesajlar.add(okunanMesaj)
                             mAdapter?.notifyDataSetChanged()
@@ -111,10 +127,13 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         oAnkiSohbetOdasi.sohbet_oda_mesaj= tumMesajlar
-                        tumSohbetOdalari!!.add(oAnkiSohbetOdasi)
-                        Log.e("TestSohbetOdalar",oAnkiSohbetOdasi.sohbetodasi_adi)
+                        if (karsi == FirebaseAuth.getInstance().currentUser?.uid || olusturan == FirebaseAuth.getInstance().currentUser?.uid){
+                            tumSohbetOdalari!!.add(oAnkiSohbetOdasi)
+                            Log.e("TestSohbetOdalar",oAnkiSohbetOdasi.sohbetodasi_adi)
 
-                        mAdapter?.notifyDataSetChanged()
+                            mAdapter?.notifyDataSetChanged()
+                        }
+
                     }
 
 
@@ -122,7 +141,6 @@ class MainActivity : AppCompatActivity() {
 
                 }
 
-               // Toast.makeText(this@MainActivity,"Tum SohbetOdalari Sayısı : "+tumSohbetOdalari.size,Toast.LENGTH_SHORT).show()
                 if (mAdapter == null){
                     sohbetOdalariListele()
                 }
@@ -135,7 +153,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sohbetOdalariListele(){
-         mAdapter = SohbetOdasiRecyclerViewAdapter(this@MainActivity,tumSohbetOdalari!!)
+        mAdapter = SohbetOdasiRecyclerViewAdapter(this@MainActivity,tumSohbetOdalari!!)
         rvSohbetListesi.adapter = mAdapter
         rvSohbetListesi.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
     }
@@ -144,7 +162,10 @@ class MainActivity : AppCompatActivity() {
         var ref = FirebaseDatabase.getInstance().reference
         ref.child("sohbet_odasi")
             .child(silinecekSohbetOdaID).removeValue()
-        init()
+
+        //init()
+        tumSohbetOdalariniGetir()
+        mAdapter?.notifyDataSetChanged()
     }
 
 
@@ -182,8 +203,8 @@ class MainActivity : AppCompatActivity() {
                 ayarlaragit()
                 return true
             }
-            R.id.menuSohbetOdasi ->{
-                sohbetleregit()
+            R.id.menuKullanicilar ->{
+                kullanicilaragit()
                 return true
             }
 
@@ -198,10 +219,16 @@ class MainActivity : AppCompatActivity() {
     }
     private fun cikisyap() {
         FirebaseAuth.getInstance().signOut()
+        loginsayfasinayonlendir()
+    }
+    private fun loginsayfasinayonlendir() {
+        FirebaseAuth.getInstance().signOut()
+        var intent = Intent(this@MainActivity, LoginActivity::class.java)
+        startActivity(intent)
     }
 
-    private fun sohbetleregit(){
-        var intent=Intent(this,SohbetActivty::class.java)
+    private fun kullanicilaragit(){
+        var intent=Intent(this,KullanicilarActivity::class.java)
         startActivity(intent)
     }
 

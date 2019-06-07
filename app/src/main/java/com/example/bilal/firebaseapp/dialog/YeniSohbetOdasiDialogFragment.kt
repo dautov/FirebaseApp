@@ -13,13 +13,10 @@ import android.widget.Toast
 
 import com.example.bilal.firebaseapp.R
 import com.example.bilal.firebaseapp.activity.MainActivity
-import com.example.bilal.firebaseapp.activity.SohbetActivty
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.model.SohbetOdasi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.android.synthetic.main.activity_ayarlar.*
-import kotlinx.android.synthetic.main.fragment_yeni_sohbet_odasi_dialog.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -61,6 +58,8 @@ class YeniSohbetOdasiDialogFragment : DialogFragment() {
                 yeniSohbetOdasi.olusturan_id = FirebaseAuth.getInstance().currentUser?.uid
                 yeniSohbetOdasi.sohbetodasi_adi =etsohbetOdasiAdi.text.toString()
                 yeniSohbetOdasi.sohbetodasi_id = sohbetOdasiID
+                yeniSohbetOdasi.durum = "public"
+                yeniSohbetOdasi.karsi_kisi_id = ""
 
                 ref.child("sohbet_odasi").child(sohbetOdasiID!!).setValue(yeniSohbetOdasi)
 
@@ -70,6 +69,7 @@ class YeniSohbetOdasiDialogFragment : DialogFragment() {
                 karsilamaMesaj.mesaj = "Sohbet Odasina hoşgeldiniz"
                 karsilamaMesaj.type = 1
                 karsilamaMesaj.zaman = getDate()
+                karsilamaMesaj.belge_adi=""
 
                 ref.child("sohbet_odasi")
                     .child(sohbetOdasiID)

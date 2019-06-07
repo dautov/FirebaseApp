@@ -144,7 +144,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                                     .child(FirebaseAuth.getInstance().currentUser?.uid!!)
                                     .child("isim")
                                     .setValue(etKullaniciAdi.text.toString())
-                                Toast.makeText(this@AyarlarActivity, "Değişiklikler yapıldı", Toast.LENGTH_SHORT).show()
+                                //Toast.makeText(this@AyarlarActivity, "Değişiklikler yapıldı", Toast.LENGTH_SHORT).show()
                             } else {
                                 Toast.makeText(
                                     this@AyarlarActivity,
@@ -235,7 +235,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                     .child("profil_resmi")
                     .setValue(downloadUri.toString())
                 progressBarGosterme()
-                //Toast.makeText(this,"Uzantu == "+task.result.toString(),Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,"Profil Resmi Başarıyla Güncellendi",Toast.LENGTH_SHORT).show()
 
             }else{
                 progressBarGosterme()
@@ -288,7 +288,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
         var referans = FirebaseDatabase.getInstance().reference
         var kullanici = FirebaseAuth.getInstance().currentUser
 
-        //Database sorgu
+        //Database sorgub
         var sorgu = referans.child("kullanici")
             .orderByKey()
             .equalTo(kullanici?.uid)
@@ -303,6 +303,12 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                     etKullaniciAdi.setText(bilgi?.isim)
                     etEmail.setText(bilgi?.mail)
                     etTelefon.setText(bilgi?.telefon)
+                    if (bilgi?.kullanici_id.isNullOrEmpty()){
+                        Log.e("KullaniciAyarlarUID","boş")
+                    }else{
+                        Log.e("KullaniciAyarlarUID",bilgi?.kullanici_id)
+                    }
+                    Log.e("KullaniciAyarlarUID",bilgi?.kullanici_id)
                     if (!bilgi?.profil_resmi.isNullOrEmpty()){
                         Picasso.get().load(bilgi?.profil_resmi).resize(100,100).into(imgProfil)
                     }else {

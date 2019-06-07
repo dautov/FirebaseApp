@@ -1,6 +1,8 @@
 package com.example.bilal.firebaseapp.activity
 
+import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -12,11 +14,13 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.widget.Toast
 import com.example.bilal.firebaseapp.R
 import com.example.bilal.firebaseapp.adapters.SohbetMesajRecyclerViewAdapter
+import com.example.bilal.firebaseapp.dialog.BelgePaylasimiDialogFragment
 import com.example.bilal.firebaseapp.dialog.fragment_belge
 import com.example.bilal.firebaseapp.model.Kullanici
 import com.example.bilal.firebaseapp.model.MetinMesaj
@@ -33,7 +37,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashSet
 
-class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListener {
+class SohbetOdaActivity : AppCompatActivity() {
 
 
     var izinler =false
@@ -45,9 +49,9 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
     var mAdapter : SohbetMesajRecyclerViewAdapter? = null
     var mesajIDSet : HashSet<String>? = null
 
-    var galeriUri:Uri? = null
+    var resimYolu:Uri? = null
     var kameraBitmap:Bitmap? = null
-    var belgeUri:Uri? = null
+    var belgeYolu:Uri? = null
     var dosyaAdi:String? = null
     var resimAdi:String?=null
 
@@ -56,85 +60,12 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
     val PDF : Int = 3
 
 
-    override fun getResimYolu(resimPath: Uri?) {
-        galeriUri = resimPath
-        resimAdi = resimPath!!.lastPathSegment
-    }
-
-    override fun getBelgeYolu(belgePath: Uri) {
-        belgeUri = belgePath
-        dosyaAdi=belgePath.lastPathSegment
-
-    }
-
-    override fun getResimBitmap(bitmap: Bitmap) {
-        kameraBitmap = bitmap
-    }
-
-    inner class BackgroundaCompress : AsyncTask<Uri,Void,ByteArray>{
-        var mBitmap : Bitmap? = null
-
-        constructor(){}
-        constructor(bMap:Bitmap){
-            if (bMap != null){
-                mBitmap = bMap
-            }
-        }
-        override fun onPreExecute() {
-            super.onPreExecute()
-        }
-        override fun doInBackground(vararg params: Uri?): ByteArray {
-            if (mBitmap == null) {
-                mBitmap = MediaStore.Images.Media.getBitmap(this@SohbetOdaActivity.contentResolver,params[0])
-            }
-            var resimBytes : ByteArray? = null
-            for (i in 1..7){
-                resimBytes = BitmapToByte(mBitmap,i) //sıkıştırılmış veri
-            }
-            return  resimBytes!!
-        }
-
-        private fun BitmapToByte(mBitmap: Bitmap?, i: Int): ByteArray? {
-            var stream = ByteArrayOutputStream()
-            mBitmap?.compress(Bitmap.CompressFormat.JPEG,i,stream)
-            return stream.toByteArray()
-        }
-
-
-        override fun onProgressUpdate(vararg values: Void?) {
-            super.onProgressUpdate(*values)
-        }
-
-        override fun onPostExecute(result: ByteArray?) {
-            super.onPostExecute(result)
-
-            uplodImageToFirebase(result)
-        }
-
-    }
-
-    private fun uplodImageToFirebase(result: ByteArray?){
-        var ref = FirebaseDatabase.getInstance().reference
-        var key = ref.key
-        var refStorage = FirebaseStorage.getInstance().getReference()
-        var yol = refStorage.child("messages/users"+ FirebaseAuth.getInstance().currentUser!!.uid + "/" + resimAdi)
-
-        var upload = yol.putBytes(result!!)
-
-        var UrlTask = upload.continueWithTask(Continuation<UploadTask.TaskSnapshot,Task<Uri>> {task ->
-            if (!task.isSuccessful){
-                task.exception?.let {
-                    throw it
-                }
-            }
-            Toast.makeText(this@SohbetOdaActivity,"Yüklendi ",Toast.LENGTH_SHORT).show()
-            return@Continuation yol.downloadUrl
-        })
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sohbet_oda)
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         //kullanici giriş çıkışları dinler
         baslatFirebaseAuthListener()
 
@@ -146,66 +77,149 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
 
 
 
+
     }
+
+
 
     private fun initBelge(){
+        btnBelgeYolla.setOnClickListener(){
+            rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
+            var items = arrayOf<CharSequence>(
+                "Fotograf Seç",
+                "Pdf Seç"
+            )
 
-        btnBelgeYolla.setOnClickListener{
-            if (izinler){
-                var dialog = fragment_belge()
-                dialog.show(supportFragmentManager,"Belge Seç")
-            }else{
-                izinAl()
-            }
+            var dialog = AlertDialog.Builder(this)
+            dialog.setTitle("Belge Türü Seçiniz")
+            dialog.setItems(items,object :DialogInterface.OnClickListener{
+                override fun onClick(dialog: DialogInterface?, which: Int) {
+                    if (which ==0){
+                        Toast.makeText(this@SohbetOdaActivity,"Resim Seçtiniz",Toast.LENGTH_SHORT).show()
+                        var intent = Intent(Intent.ACTION_GET_CONTENT)
+                        intent.type = "image/*"
+                        startActivityForResult(intent,100)
+                    }else{
+                        Toast.makeText(this@SohbetOdaActivity,"pdf Seçtiniz",Toast.LENGTH_SHORT).show()
+                        var intent = Intent(Intent.ACTION_GET_CONTENT)
+                        intent.setType("application/pdf")
+                        startActivityForResult(Intent.createChooser(intent,"Select File"),300)
+                    }
+                }
 
-            //overload
-            if (galeriUri != null){
-                photoCompress(galeriUri!!)
-            }else if (kameraBitmap != null){
-                photoCompress(kameraBitmap!!)
-            }
+            })
+
+            dialog.setNegativeButton("Hayır",object : DialogInterface.OnClickListener{
+                override fun onClick(dialog: DialogInterface?, which: Int) {
+                    dialog!!.cancel()
+                }
+
+            })
+
+            dialog.show()
+
+
+
 
         }
-    }
-    // bu kısımlar working thread tarafında çalışacak
-    private fun photoCompress(galeriUri: Uri) {
-        var compress = BackgroundaCompress()
-        compress.execute(galeriUri)//doing background çalışmaya başlıyor
-    }
-    private fun photoCompress(kameraBitmap: Bitmap) {
-        var compress = BackgroundaCompress(kameraBitmap)
-        var uri : Uri? = null
-        compress.execute(uri)
+
+
+
     }
 
-    private fun izinAl() {
-        var izin = arrayOf(
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            android.Manifest.permission.CAMERA
-        )
-        if (ContextCompat.checkSelfPermission(this, izin[0]) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(this, izin[1]) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(this, izin[2]) == PackageManager.PERMISSION_GRANTED
-        ) {
-            izinler = true
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode==100 && resultCode == Activity.RESULT_OK && data != null){
+            var galeriResimYolu = data.data
+            resimYolu = galeriResimYolu
+            Log.e("URIYoluTestResim",galeriResimYolu.toString())
+            var dosyAdi = galeriResimYolu.lastPathSegment
+            //tvDosyaAdi.text = dosyAdi
+            uploadResim()
+
         }else{
-            ActivityCompat.requestPermissions(this, izin, 150)
+            var PdfYolu = data!!.data
+            Log.e("URIYoluTestPDF",PdfYolu.toString())
+            belgeYolu = PdfYolu
+            //tvDosyaAdi.text = PdfYolu.lastPathSegment
+
+
+            uploadPdf()
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode == 150) {
-            //grantResult benim permission bilgileri tutar
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
-                var dialog = fragment_belge()
-                dialog.show(supportFragmentManager,"fotosec")
-            }else{
-                Toast.makeText(this,"Bütün izinleri onaylamalısınız", Toast.LENGTH_SHORT).show()
+    private fun uploadResim(){
+        var storageReference = FirebaseStorage.getInstance().getReference()
+
+        Log.e("UploadTestUR",resimYolu.toString())
+
+        var ref = FirebaseDatabase.getInstance().reference
+        var key = ref.key
+        var yol = storageReference.child("messages/users"+ FirebaseAuth.getInstance().currentUser!!.uid + "/images" )
+
+        var upload = yol.putFile(resimYolu!!)
+
+        var UrlTask = upload.continueWithTask(Continuation<UploadTask.TaskSnapshot,Task<Uri>> { task ->
+            if (!task.isSuccessful){
+                task.exception?.let {
+                    throw it
+                }
+            }
+            return@Continuation yol.downloadUrl
+        }).addOnCompleteListener { task ->
+            if (task.isSuccessful){
+                Toast.makeText(this@SohbetOdaActivity,"Mesaj GİDECEKKK",Toast.LENGTH_SHORT).show()
+                Log.e("DownloadURLRES",task.result.toString())
+
+                var downloadLink = task.result
+                var yazilanMesaj = downloadLink.toString()
+                var kaydedilecekMesaj = MetinMesaj()
+                kaydedilecekMesaj.mesaj = yazilanMesaj
+                kaydedilecekMesaj.kullanici_id = FirebaseAuth.getInstance().currentUser?.uid
+                kaydedilecekMesaj.zaman = getMesajTarih()
+                kaydedilecekMesaj.type = 2
+
+                var ref = FirebaseDatabase.getInstance().reference
+                                            .child("sohbet_odasi")
+                                            .child(secilenSohbetOdaID)
+                                            .child("sohbet_oda_mesaj")
+
+
+                var yenimesajID = ref.push().key
+                ref.child(yenimesajID!!)
+                    .setValue(kaydedilecekMesaj)
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
+    private fun uploadPdf(){
+        var storageReference = FirebaseStorage.getInstance().getReference()
+
+        Log.e("UploadTestUR",belgeYolu.toString())
+
+        var ref = FirebaseDatabase.getInstance().reference
+        var key = ref.key
+        var yol = storageReference.child("messages/users"+ FirebaseAuth.getInstance().currentUser!!.uid + "/pdf" )
+
+        var upload = yol.putFile(belgeYolu!!)
+
+        var UrlTask = upload.continueWithTask(Continuation<UploadTask.TaskSnapshot,Task<Uri>> { task ->
+            if (!task.isSuccessful){
+                task.exception?.let {
+                    throw it
+                }
+            }
+            return@Continuation yol.downloadUrl
+        }).addOnCompleteListener { task ->
+            if (task.isSuccessful){
+                Toast.makeText(this@SohbetOdaActivity,"Mesaj GİDECEKKK",Toast.LENGTH_SHORT).show()
+                Log.e("DownloadURLRES",task.result.toString())
+            }
+        }
+    }
+
+
 
     private fun init(){
         etMesaj.setOnClickListener{
@@ -222,7 +236,8 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
                 kaydedilecekMesaj.type = Text
 
                 var ref = FirebaseDatabase.getInstance().reference
-                    .child("sohbet_odasi").child(secilenSohbetOdaID).child("sohbet_oda_mesaj")
+                    .child("sohbet_odasi").child(secilenSohbetOdaID)
+                    .child("sohbet_oda_mesaj")
 
                 var yenimesajID = ref.push().key
                 ref.child(yenimesajID!!)
@@ -239,9 +254,23 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
     }
 
     private fun SohbetOdasiIDGetir() {
-        secilenSohbetOdaID = intent.getStringExtra("sohbetodasi_id")
+        var mainAct = intent.getStringExtra("sohbetodasi_id")
+
+
+
+
+        if (mainAct != null){
+            secilenSohbetOdaID = intent.getStringExtra("sohbetodasi_id")
+        }else if (intent.hasExtra("kullanicidanGelen") != null ){
+            secilenSohbetOdaID =  intent.getStringExtra("kullanicidanGelen")
+        }
+
         Log.e("IDdogTest",secilenSohbetOdaID)
         MesajListener()
+    }
+
+    private fun SohbetodasiIDgetir(){
+
     }
 
     //değişiklikleri dinleyen kısım
@@ -275,6 +304,7 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
                         var yeniMesaj = MetinMesaj()
                         var kullaniciID = mesaj.getValue(MetinMesaj::class.java)!!.kullanici_id
 
+
                         if (!mesajIDSet!!.contains(mesaj.key)){
                             mesajIDSet!!.add(mesaj.key!!)
                             if (kullaniciID != null){
@@ -282,6 +312,7 @@ class SohbetOdaActivity : AppCompatActivity(), fragment_belge.onDosyaMesajListen
                                 yeniMesaj.mesaj = mesaj.getValue(MetinMesaj::class.java)!!.mesaj
                                 yeniMesaj.zaman = mesaj.getValue(MetinMesaj::class.java)!!.zaman
                                 yeniMesaj.type = mesaj.getValue(MetinMesaj::class.java)!!.type
+                                yeniMesaj.belge_adi = mesaj.getValue(MetinMesaj::class.java)!!.belge_adi
 
                                 var kullaniciBilgileri = mMesajReferans?.child("kullanici")?.orderByKey()?.equalTo(kullaniciID)
                                 kullaniciBilgileri?.addListenerForSingleValueEvent(object : ValueEventListener{

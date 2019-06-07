@@ -1,6 +1,5 @@
 package com.example.bilal.firebaseapp.adapters
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
@@ -23,9 +22,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.satir_sohbet_oda.view.*
 import android.support.v7.app.AppCompatActivity
 import com.example.bilal.firebaseapp.activity.MainActivity
-import com.example.bilal.firebaseapp.activity.SohbetActivty
 import com.example.bilal.firebaseapp.activity.SohbetOdaActivity
-import java.text.FieldPosition
 
 class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdalari:ArrayList<SohbetOdasi>) : RecyclerView.Adapter<SohbetOdasiRecyclerViewAdapter.SohbetOdasiHolder>() {
 
@@ -42,6 +39,7 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
     override fun getItemCount(): Int {
         Log.e("ItemCount Test",sohbetOdalari.size.toString())
         return sohbetOdalari.size
+
     }
 
     override fun onBindViewHolder(p0: SohbetOdasiHolder, p1: Int) {
@@ -57,8 +55,10 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
         var sohbetOdasiResim = tekSatirSohbetOdasi.imgProfilResim
         var sohbetOdasiSil= tekSatirSohbetOdasi.imgSohbetSil
 
+
         fun setData(oAnOlusturulanSohbetOdasi: SohbetOdasi, p1: Int) {
             sohbetOdasiAdi.text = oAnOlusturulanSohbetOdasi.sohbetodasi_adi
+
 
             sohbetOdasiMesajSayisi.text = (oAnOlusturulanSohbetOdasi.sohbet_oda_mesaj)?.size.toString()
 
@@ -71,6 +71,7 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
                     dialog.setPositiveButton("Evet",object : DialogInterface.OnClickListener{
                         override fun onClick(dialog: DialogInterface?, which: Int) {
                             (myActivity as MainActivity).sohbetOdasiSil(oAnOlusturulanSohbetOdasi.sohbetodasi_id.toString())
+                            (myActivity as MainActivity).mAdapter!!.notifyDataSetChanged()
 
                         }
                     })
@@ -98,6 +99,7 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
             }
 
 
+            if (oAnOlusturulanSohbetOdasi.olusturan_id != FirebaseAuth.getInstance().currentUser?.uid){
 
             var ref = FirebaseDatabase.getInstance().reference
             var sorgu = ref.child("kullanici")
@@ -117,13 +119,38 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
                             }else{
                                 Picasso.get().load(profil).resize(72,72).into(sohbetOdasiResim)
                             }
-
-
-
                         }
                     }
 
                 })
+            }else{
+                var ref = FirebaseDatabase.getInstance().reference
+                var sorgu = ref.child("kullanici")
+                    .orderByKey()
+                    .equalTo(oAnOlusturulanSohbetOdasi.karsi_kisi_id).addListenerForSingleValueEvent(object : ValueEventListener{
+                        override fun onCancelled(p0: DatabaseError) {
+
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            for (kullanici in p0.children){
+                                sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
+
+                                var profil = kullanici.getValue(Kullanici::class.java)!!.profil_resmi.toString()
+                                if (profil.isNullOrEmpty() or profil.isNullOrBlank()){
+                                    Picasso.get().load(R.drawable.ic_action_user).resize(72,72).into(sohbetOdasiResim)
+                                }else{
+                                    Picasso.get().load(profil).resize(72,72).into(sohbetOdasiResim)
+                                }
+
+
+
+                            }
+                        }
+
+                    })
+
+            }
         }
 
     }

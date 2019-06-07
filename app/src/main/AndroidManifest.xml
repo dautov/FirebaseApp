@@ -13,7 +13,13 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".activity.SohbetOdaActivity">
+        <activity android:name=".activity.KullanicilarActivity"
+                  android:parentActivityName=".activity.MainActivity">
+        </activity>
+        <activity android:name=".activity.BelgeUploadActivity">
+        </activity>
+        <activity android:name=".activity.SohbetOdaActivity"
+                  android:parentActivityName=".activity.MainActivity">
         </activity>
         <activity android:name=".activity.MainActivity">
         </activity>
@@ -26,10 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".activity.AyarlarActivity">
+        <activity android:name=".activity.AyarlarActivity"
+                  android:parentActivityName=".activity.MainActivity">
         </activity>
-        <activity android:name=".activity.SohbetActivty">
-        </activity>
+
     </application>
 
 </manifest>

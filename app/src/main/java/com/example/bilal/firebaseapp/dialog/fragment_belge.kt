@@ -13,9 +13,12 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 
 import com.example.bilal.firebaseapp.R
+import kotlinx.android.synthetic.main.fragment_fragment_belge.*
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -31,6 +34,11 @@ class fragment_belge : DialogFragment() {
     lateinit var tvGaleri:TextView
     lateinit var tvKamera:TextView
     lateinit var tvPDF:TextView
+    lateinit var tvDosyaAdi:TextView
+    lateinit var btnBelgeGonder : Button
+    lateinit var btnIptal : Button
+
+
 
     interface onDosyaMesajListener {
         //telefonuuzda bulunan yolu seçiyoruz
@@ -53,6 +61,11 @@ class fragment_belge : DialogFragment() {
         tvGaleri = v.findViewById(R.id.tvGaleriden)
         tvKamera = v.findViewById(R.id.tvFotografCek)
         tvPDF = v.findViewById(R.id.tvPdf)
+        tvDosyaAdi = v.findViewById(R.id.tvDosyaAdi)
+        btnBelgeGonder = v.findViewById(R.id.btnBelgeMesaj)
+        btnIptal = v.findViewById(R.id.btnGonderiIptal)
+
+
 
         tvGaleri.setOnClickListener {
             var intent = Intent(Intent.ACTION_GET_CONTENT)
@@ -65,11 +78,19 @@ class fragment_belge : DialogFragment() {
         }
 
         tvPDF.setOnClickListener {
-            var intent = Intent()
+            var intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.setType("application/pdf")
-            intent.setAction(Intent.ACTION_GET_CONTENT)
             startActivityForResult(Intent.createChooser(intent,"Select File"),300)
         }
+        btnBelgeGonder.setOnClickListener{
+
+            Toast.makeText(activity,"Belge Upload edilecek", Toast.LENGTH_SHORT).show()
+        }
+/*
+        btnIptal.setOnClickListener {
+            dialog.dismiss()
+        }*/
+
 
         return v
     }
@@ -83,17 +104,28 @@ class fragment_belge : DialogFragment() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode==100 && resultCode == Activity.RESULT_OK && data != null){
             var galeriResimYolu = data.data
+            var dosyAdi = galeriResimYolu.lastPathSegment
+            tvDosyaAdi.text = dosyAdi
+
 
             mDosyaMesajListener.getResimYolu(galeriResimYolu)
-            dismiss()
+
         }else if (requestCode == 200 && resultCode == Activity.RESULT_OK && data != null){
-            var kameradanCekilen = data.extras.get("data")as Bitmap
+            var kameradanCekilen : Bitmap
+            kameradanCekilen  = data.extras.get("data") as Bitmap
+
+            tvDosyaAdi.text= "Kamera"
             mDosyaMesajListener.getResimBitmap(kameradanCekilen)
-        }else if (requestCode == 300 && resultCode == Activity.RESULT_OK && data != null){
-            var galeriDosyaYolu = data.data
+        }else{
+            var galeriDosyaYolu = data!!.data
+            var asd = galeriDosyaYolu.lastPathSegment
             mDosyaMesajListener.getBelgeYolu(galeriDosyaYolu)
-            dismiss()
+
         }
+    }
+
+    private fun uploadImage(){
+
     }
 
 

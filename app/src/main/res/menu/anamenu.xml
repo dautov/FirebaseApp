@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/menuSohbetOdasi" android:title="Sohbet Odasi"></item>
+    <item android:id="@+id/menuKullanicilar" android:title="Kullanıcılar"></item>
     <item android:id="@+id/menuAyarlar" android:title="Ayarlar"></item>
     <item android:id="@+id/menuExit" android:title="Çıkış yap"></item>
 

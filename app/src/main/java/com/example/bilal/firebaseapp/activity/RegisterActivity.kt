@@ -3,6 +3,7 @@ package com.example.bilal.firebaseapp.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.example.bilal.firebaseapp.R
@@ -44,13 +45,14 @@ class RegisterActivity : Activity() {
                     if (p0.isSuccessful) {
                         progressBarGosterme()
                         onayMail()
+                        var uid = FirebaseAuth.getInstance().currentUser?.uid
+                        Log.e("RegisterTestUID",uid)
                         var dbUyeKayit = Kullanici()
                         dbUyeKayit.isim = etName.text.toString()
-                        dbUyeKayit.kullanici_id = FirebaseAuth.getInstance().currentUser?.uid
+                        dbUyeKayit.kullanici_id = uid
                         dbUyeKayit.seviye = "1"
                         dbUyeKayit.mail = etEmail.text.toString()
                         dbUyeKayit.profil_resmi = ""
-                        dbUyeKayit.kullanici_id = ""
                         dbUyeKayit.telefon = ""
 
 
@@ -62,6 +64,7 @@ class RegisterActivity : Activity() {
                                     Toast.makeText(this@RegisterActivity, "Kayıt Olundu ", Toast.LENGTH_SHORT).show()
                                     FirebaseAuth.getInstance().signOut()
                                     loginsayfasinayonlendir()
+                                    finish()
                                 }
                             }
 
