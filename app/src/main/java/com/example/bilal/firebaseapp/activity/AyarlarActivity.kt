@@ -34,7 +34,11 @@ import java.io.ByteArrayOutputStream
 
 class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimListener {
 
-    var izinDurumu = false
+    companion object {
+        var izinDurumu : Boolean= false
+    }
+
+
     var galeridenGlenUri: Uri? = null
     var kamerdanGelenBmap: Bitmap? = null
     val MEGABYTE = 1000000.toDouble()

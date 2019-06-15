@@ -13,8 +13,14 @@ import com.example.bilal.firebaseapp.adapters.SohbetOdasiRecyclerViewAdapter
 import com.example.bilal.firebaseapp.dialog.YeniSohbetOdasiDialogFragment
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.model.SohbetOdasi
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.iid.FirebaseInstanceIdService
+import com.google.firebase.iid.InstanceIdResult
+import com.google.firebase.messaging.FirebaseMessagingService
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -32,13 +38,38 @@ class MainActivity : AppCompatActivity() {
         initMyAuthStateListener()
         sohbetOdaListener()
         init()
-
-
-
-
+        initFCM()
+        getPendingIntent()
 
 
     }
+
+    fun initFCM(){
+        FirebaseInstanceId.getInstance().instanceId
+            .addOnSuccessListener(this,OnSuccessListener<InstanceIdResult>{
+                ınstanceIdResult: InstanceIdResult? ->
+                val updatedToken = ınstanceIdResult?.token
+                registerToDatabase(updatedToken)
+            })
+    }
+
+    private fun registerToDatabase(refreshedToken: String?) {
+        var ref = FirebaseDatabase.getInstance().reference
+            .child("kullanici")
+            .child(FirebaseAuth.getInstance().currentUser?.uid!!)
+            .child("mesaj_token")
+            .setValue(refreshedToken)
+    }
+
+    private fun getPendingIntent(){
+        var gelenIntent = intent
+        if (gelenIntent.hasExtra("sohbet_odasi_id")){
+            var intent = Intent(this,SohbetOdaActivity::class.java)
+            intent.putExtra("sohbet_odasi_id",gelenIntent.getStringExtra("sohbet_odasi_id"))
+            startActivity(intent)
+        }
+    }
+
 
     fun init(){
         tumSohbetOdalariniGetir()
@@ -51,8 +82,7 @@ class MainActivity : AppCompatActivity() {
     //
     var mValueEventListener : ValueEventListener = object : ValueEventListener {
         override fun onCancelled(p0: DatabaseError) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            FirebaseAuth.getInstance().signOut()
+
         }
 
         override fun onDataChange(p0: DataSnapshot) {

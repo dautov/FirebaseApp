@@ -1,7 +1,18 @@
 package com.example.bilal.firebaseapp.adapters
 
+import android.app.AlertDialog
+import android.app.DownloadManager
 import android.content.Context
-import android.support.constraint.ConstraintLayout
+import android.content.Context.DOWNLOAD_SERVICE
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Environment
+import android.support.v4.app.ActivityCompat.requestPermissions
+import android.support.v4.content.ContextCompat.checkSelfPermission
+import android.support.v4.content.ContextCompat.getSystemService
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,47 +22,55 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.R
+import com.example.bilal.firebaseapp.activity.DisplayActivity
+
 import com.google.firebase.auth.FirebaseAuth
+
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.img_mesaj_sag.view.*
 import kotlinx.android.synthetic.main.img_mesaj_sol.view.*
+import kotlinx.android.synthetic.main.pdf_mesaj_sag.view.*
+import kotlinx.android.synthetic.main.pdf_mesaj_sol.view.*
 import kotlinx.android.synthetic.main.text_mesaj_sag.view.*
-import kotlinx.android.synthetic.main.pdf_mesaj.view.*
 import kotlinx.android.synthetic.main.text_mesaj_sol.view.*
 import java.lang.IllegalArgumentException
 
 
-class SohbetMesajRecyclerViewAdapter(context : Context, tumMejlar : ArrayList<MetinMesaj>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : ArrayList<MetinMesaj>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    var mContext = context
+    //var mContext = contextcontext : Context
     var mTumMesajlar = tumMejlar
-    //var myActivity = mActivity
+    var myActivity = activity
 
 
     companion object {
          val TXT = 1
          val IMG = 2
          val DOC = 3
+
+        var myContext : Context? = null
     }
 
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecyclerView.ViewHolder {
-        var inflater = LayoutInflater.from(mContext)
+        var inflater = LayoutInflater.from(p0.context)
+        myContext = p0.context
 
         Log.e("createviewtest",p1.toString())
+
 
         when(p1){
             1 -> return  MesajViewHolder(inflater.inflate(R.layout.text_mesaj_sag,p0,false))
             2 -> return  MesajViewHolder2(inflater.inflate(R.layout.text_mesaj_sol,p0,false))
             3 -> return  ImageViewHolder(inflater.inflate(R.layout.img_mesaj_sag,p0,false))
             4 -> return  ImageViewHolder2(inflater.inflate(R.layout.img_mesaj_sol,p0,false))
-            5 -> return  PDFMesajViewHolder(inflater.inflate(R.layout.pdf_mesaj,p0,false))
-            6 -> return  PDFMesajViewHolder2(inflater.inflate(R.layout.pdf_mesaj,p0,false))
+            5 -> return  PDFMesajViewHolder(inflater.inflate(R.layout.pdf_mesaj_sag,p0,false))
+            6 -> return  PDFMesajViewHolder2(inflater.inflate(R.layout.pdf_mesaj_sol,p0,false))
              else -> throw IllegalArgumentException("Invalid View Type") as Throwable
 
         }
 
-        return object : RecyclerView.ViewHolder(View(mContext)){}
+        //return object : RecyclerView.ViewHolder(View(mContext)){}
 
     }
 
@@ -157,7 +176,10 @@ class SohbetMesajRecyclerViewAdapter(context : Context, tumMejlar : ArrayList<Me
 
         }
 
-    }class ImageViewHolder2(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    }
+
+
+    class ImageViewHolder2(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var layout = itemView as FrameLayout
         var profilResim = layout.imgResimMesajSol
         var zaman = layout.textView_message_time_sol
@@ -179,29 +201,98 @@ class SohbetMesajRecyclerViewAdapter(context : Context, tumMejlar : ArrayList<Me
 
     }
 
-    class PDFMesajViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
-        var belge = itemView as ConstraintLayout
-        var pdf = belge.txtPDF
-        var pdf_view = belge.pdfView
+     inner class PDFMesajViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+        var belge = itemView as FrameLayout
+        var pdf = belge.tvPdfMesajSag
+        var zaman = belge.pdf_message_time_sag
 
         fun setPDF(oAnkiMesaj: MetinMesaj,p1: Int){
-            pdf.text = oAnkiMesaj.mesaj
+            pdf.text = "PDF Belgesi " + oAnkiMesaj.belge_adi +".pdf"
+            zaman.text = oAnkiMesaj.zaman
 
+            Log.e("BelgeTestPdf",oAnkiMesaj.belge_adi)
+            belge.setOnLongClickListener {
+
+
+
+
+                    var items = arrayOf<CharSequence>(
+                        "Görüntüle",
+                        "İndir"
+                    )
+
+                    var dialog = AlertDialog.Builder(myActivity)
+                    dialog.setTitle("Belge")
+                    dialog.setItems(items,object : DialogInterface.OnClickListener{
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            if (which ==0){
+                                var intent = Intent(myActivity, DisplayActivity::class.java)
+                                intent.putExtra("link",oAnkiMesaj.mesaj)
+                                myActivity.startActivity(intent)
+                            }else{
+
+                            }
+
+                        }
+
+                    })
+                    dialog.show()
+
+
+                return@setOnLongClickListener true
+
+            }
+        }
+
+    }
+
+    inner class PDFMesajViewHolder2(itemView: View): RecyclerView.ViewHolder(itemView) {
+        var belge2 = itemView as FrameLayout
+        var pdf = belge2.tvPdfMesajSol
+        var zaman = belge2.pdf_message_time_sol
+
+        fun setPDF(oAnkiMesaj: MetinMesaj,p1: Int){
+            pdf.text = "PDF"
+            zaman.text = oAnkiMesaj.zaman
+
+            Log.e("BelgeTestPdf1",oAnkiMesaj.belge_adi)
+            belge2.setOnLongClickListener {
+                var items = arrayOf<CharSequence>(
+                    "Görüntüle",
+                    "İndir"
+                )
+
+                var dialog = AlertDialog.Builder(myActivity)
+                dialog.setTitle("Belge")
+                dialog.setItems(items,object : DialogInterface.OnClickListener{
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        if (which ==0){
+                            var intent = Intent(myActivity, DisplayActivity::class.java)
+                            intent.putExtra("link",oAnkiMesaj.mesaj)
+                            myActivity.startActivity(intent)
+                        }else{
+
+                        }
+
+                    }
+
+                })
+                dialog.show()
+
+
+                return@setOnLongClickListener true
+            }
 
         }
 
     }
 
-    class PDFMesajViewHolder2(itemView: View): RecyclerView.ViewHolder(itemView) {
-        var belge = itemView as ConstraintLayout
-        var pdf = belge.txtPDF
 
-        fun setPDF(oAnkiMesaj: MetinMesaj,p1: Int){
-            pdf.text = oAnkiMesaj.mesaj
 
-        }
 
-    }
+
+
+
 
 }
 

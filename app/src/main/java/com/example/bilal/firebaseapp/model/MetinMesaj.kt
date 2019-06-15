@@ -17,10 +17,11 @@ class MetinMesaj {
     var adi: String? = null
     var type : Int?  = null
     var belge_adi : String? = null
+    var mesaj_id : String? = null
 
     constructor() {}
 
-    constructor(mesaj: String, kullanici_id: String, zaman: String, profil_resmi: String, adi: String ,type : Int,belge_adi : String) {
+    constructor(mesaj: String, kullanici_id: String, zaman: String, profil_resmi: String, adi: String ,type : Int,belge_adi : String,mesaj_id: String) {
         this.mesaj = mesaj
         this.kullanici_id = kullanici_id
         this.zaman = zaman
@@ -28,5 +29,6 @@ class MetinMesaj {
         this.adi = adi
         this.type = type
         this.belge_adi = belge_adi
+        this.mesaj_id=mesaj_id
     }
 }
