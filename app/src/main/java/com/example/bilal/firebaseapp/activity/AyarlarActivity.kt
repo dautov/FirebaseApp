@@ -45,7 +45,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
 
     override fun getResimYol(resimPath: Uri?) {
         galeridenGlenUri = resimPath
-        Picasso.get().load(galeridenGlenUri).resize(100,100).into(imgProfil)
+        Picasso.get().load(galeridenGlenUri).into(circlView)
 
     }
 
@@ -111,6 +111,9 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ayarlar)
+
+        supportActionBar?.setTitle("Ayarlar")
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         var user = FirebaseAuth.getInstance().currentUser!!
 
@@ -183,6 +186,7 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                 user.reauthenticate(credential)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
+                            tvSifreMailGuncelle.visibility = View.INVISIBLE
                             SifreMailGuncelleLayout.visibility = View.VISIBLE
 
                             btnMailKaydet.setOnClickListener {
@@ -314,9 +318,9 @@ class AyarlarActivity : AppCompatActivity(), ProfilResmiFragment.onProfilResimLi
                     }
                     Log.e("KullaniciAyarlarUID",bilgi?.kullanici_id)
                     if (!bilgi?.profil_resmi.isNullOrEmpty()){
-                        Picasso.get().load(bilgi?.profil_resmi).resize(100,100).into(imgProfil)
+                        Picasso.get().load(bilgi?.profil_resmi).into(circlView)
                     }else {
-                        Picasso.get().load(R.drawable.ic_action_user).resize(100,100).into(imgProfil)
+                        Picasso.get().load(R.drawable.ic_action_user).into(circlView)
                     }
 
                 }

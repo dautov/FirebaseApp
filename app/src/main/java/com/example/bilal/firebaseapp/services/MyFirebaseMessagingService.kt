@@ -99,32 +99,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.e("FCMBID",bildirimID.toString())
 
 
-        /*var builder = NotificationCompat.Builder(this@MyFirebaseMessagingService,oAnkiSohbetOdasi.sohbetodasi_adi!!)
-            .setSmallIcon(R.drawable.ic_action_user)
-            .setLargeIcon(BitmapFactory.decodeResource(resources,R.drawable.ic_action_user))
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-            .setContentTitle(baslik)
-            .setContentText("İçerik")
-            .setAutoCancel(true)
-            .setSubText("sub text")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("Yazi"))
-            .setNumber(987)
-            .setOnlyAlertOnce(true)
-            var builder = Notification.Builder(this)
-            .setContentTitle("baslik")
 
-        var noticationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        noticationManager.notify(bildirimID,builder.build())
+        var ChannelID = "ABCDRF"
 
         var pendingIntent = Intent(this,MainActivity::class.java)
         pendingIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        pendingIntent.putExtra("sohbet_odasi_id",oAnkiSohbetOdasi.sohbetodasi_id!!)
+        pendingIntent.putExtra("sohbet_odasi_id",oAnkiSohbetOdasi.sohbetodasi_id)
 
-        var bildirimPendingIntent = PendingIntent.getActivity(this,10,pendingIntent,PendingIntent.FLAG_CANCEL_CURRENT)
-            .setContentIntent(bildirimPendingIntent)
-            */
+        var bildirimPendingIntent = PendingIntent.getActivity(this,10,pendingIntent,PendingIntent.FLAG_UPDATE_CURRENT)
 
-        var ChannelID = "ABCDRF"
+
 
         var builder = NotificationCompat.Builder(this,oAnkiSohbetOdasi.sohbetodasi_adi!!)
             .setSmallIcon(R.drawable.ic_action_user)
@@ -137,6 +121,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setStyle(NotificationCompat.BigTextStyle().bigText(icerik))
             .setNumber(okunacakMesajSayisi)
             .setSubText("" + okunacakMesajSayisi + " yeni mesaj")
+            .setContentIntent(bildirimPendingIntent)
             .build()
 
         var notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

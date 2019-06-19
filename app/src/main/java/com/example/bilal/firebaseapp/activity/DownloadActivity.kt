@@ -6,10 +6,9 @@ import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.content.ContextCompat
+import android.view.View
 import com.example.bilal.firebaseapp.R
-import com.example.bilal.firebaseapp.adapters.SohbetMesajRecyclerViewAdapter
-import com.example.bilal.firebaseapp.model.MetinMesaj
+import kotlinx.android.synthetic.main.activity_download.*
 
 class DownloadActivity : AppCompatActivity() {
 
@@ -17,16 +16,19 @@ class DownloadActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_download)
 
-        downloadFile()
+        progressBar2.visibility = View.VISIBLE
+        var url = intent.getStringExtra("linkDownload")
+        downloadFile(url)
 
-        onBackPressed()
+
+        //onBackPressed()
 
     }
-    private fun downloadFile(mesaj : MetinMesaj){
+    private fun downloadFile(url: String) {
 
-        //val url = etURL.text.toString()
+        val url = url
 
-        val request = DownloadManager.Request(Uri.parse())
+        val request = DownloadManager.Request(Uri.parse(url))
 
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or  DownloadManager.Request.NETWORK_WIFI)
         request.setTitle("Download")
@@ -40,7 +42,7 @@ class DownloadActivity : AppCompatActivity() {
         val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         manager.enqueue(request)
 
-
+        progressBar2.visibility = View.INVISIBLE
 
     }
 

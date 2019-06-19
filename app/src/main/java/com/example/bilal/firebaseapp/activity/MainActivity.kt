@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         var gelenIntent = intent
         if (gelenIntent.hasExtra("sohbet_odasi_id")){
             var intent = Intent(this,SohbetOdaActivity::class.java)
-            intent.putExtra("sohbet_odasi_id",gelenIntent.getStringExtra("sohbet_odasi_id"))
+            intent.putExtra("sohbet_odasi_id_bildirim",gelenIntent.getStringExtra("sohbet_odasi_id"))
             startActivity(intent)
         }
     }
@@ -74,10 +74,10 @@ class MainActivity : AppCompatActivity() {
     fun init(){
         tumSohbetOdalariniGetir()
         //Toast.makeText(this@MainActivity,"Selam Bro",Toast.LENGTH_SHORT).show()
-        floatingActionButtonSohbet.setOnClickListener {
+       /* floatingActionButtonSohbet.setOnClickListener {
             var dialog = YeniSohbetOdasiDialogFragment()
             dialog.show(supportFragmentManager,"goster")
-        }
+        }*/
     }
     //
     var mValueEventListener : ValueEventListener = object : ValueEventListener {

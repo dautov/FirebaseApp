@@ -3,8 +3,10 @@ package com.example.bilal.firebaseapp.activity
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -16,6 +18,7 @@ import com.example.bilal.firebaseapp.adapters.SohbetMesajRecyclerViewAdapter
 import com.example.bilal.firebaseapp.model.FCMModel
 import com.example.bilal.firebaseapp.model.Kullanici
 import com.example.bilal.firebaseapp.model.MetinMesaj
+import com.example.bilal.firebaseapp.model.SohbetOdasi
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
@@ -30,6 +33,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.jar.Manifest
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
@@ -37,6 +41,7 @@ class SohbetOdaActivity : AppCompatActivity() {
 
 companion object {
     var open : Boolean = false
+    var msg : String? = null
 }
 
     var tumMesajlar : ArrayList<MetinMesaj>?  = null
@@ -46,6 +51,9 @@ companion object {
     var mMesajReferans : DatabaseReference? = null
     var mAdapter : SohbetMesajRecyclerViewAdapter? = null
     var mesajIDSet : HashSet<String>? = null
+    var Mesaj : String? = null
+    var titleName : String? = ""
+    var UserTitle:String? = ""
 
     var resimYolu:Uri? = null
     var kameraBitmap:Bitmap? = null
@@ -68,19 +76,49 @@ companion object {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         //kullanici giriş çıkışları dinler
         baslatFirebaseAuthListener()
-
+        bildirimPendingIntent()
         //tıklanan odanın ID si
         SohbetOdasiIDGetir()
+
+        //titleOda()
+
 
         getServerKey()
 
         init()
         initBelge()
-        rvMesaj.smoothScrollToPosition(mAdapter!!.itemCount-1)
+       // rvMesaj.smoothScrollToPosition(mAdapter!!.itemCount-1)
 
 
 
 
+    }
+
+    private fun titleOda(){
+        Log.e("UsertitleTest",UserTitle)
+        var kullaniciBilgileri = FirebaseDatabase.getInstance().reference
+            .child("kullanici")?.orderByKey()?.equalTo(UserTitle)
+            .addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onCancelled(p0: DatabaseError) {
+
+            }
+
+            override fun onDataChange(p0: DataSnapshot) {
+                //bulunan kullanici
+                if (p0.exists()){
+                    var kulllanici = p0?.children.iterator().next()
+                    var titleName = MetinMesaj()
+                    titleName.adi = kulllanici.getValue(Kullanici::class.java)!!.isim.toString()
+                    Log.e("titleTest",titleName.adi)
+                    //Toast.makeText(this@SohbetOdaActivity,"TitleName" + titleName,Toast.LENGTH_SHORT).show()
+                    //supportActionBar?.setTitle(titleName)
+
+                }
+
+
+            }
+
+        })
     }
 
     private fun getServerKey(){
@@ -106,39 +144,83 @@ companion object {
 
     private fun initBelge(){
         btnBelgeYolla.setOnClickListener(){
-            rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
-            var items = arrayOf<CharSequence>(
-                "Fotograf Seç",
-                "Pdf Seç"
-            )
 
-            var dialog = AlertDialog.Builder(this)
-            dialog.setTitle("Belge Türü Seçiniz")
-            dialog.setItems(items,object :DialogInterface.OnClickListener{
-                override fun onClick(dialog: DialogInterface?, which: Int) {
-                    if (which ==0){
-                        Toast.makeText(this@SohbetOdaActivity,"Resim Seçtiniz",Toast.LENGTH_SHORT).show()
-                        var intent = Intent(Intent.ACTION_GET_CONTENT)
-                        intent.type = "image/*"
-                        startActivityForResult(intent,100)
-                    }else{
-                        Toast.makeText(this@SohbetOdaActivity,"pdf Seçtiniz",Toast.LENGTH_SHORT).show()
-                        var intent = Intent(Intent.ACTION_GET_CONTENT)
-                        intent.setType("application/pdf")
-                        startActivityForResult(Intent.createChooser(intent,"Select File"),300)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED){
+                    requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),100)
+
+                }else{
+                    rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
+                    var items = arrayOf<CharSequence>(
+                        "Fotograf Seç",
+                        "Pdf Seç"
+                    )
+                    var dialog = AlertDialog.Builder(this)
+                    dialog.setTitle("Belge Türü Seçiniz")
+                    dialog.setItems(items,object :DialogInterface.OnClickListener{
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            if (which ==0){
+                                Toast.makeText(this@SohbetOdaActivity,"Resim Seçtiniz",Toast.LENGTH_SHORT).show()
+                                var intent = Intent(Intent.ACTION_GET_CONTENT)
+                                intent.type = "image/*"
+                                startActivityForResult(intent,100)
+                            }else{
+                                Toast.makeText(this@SohbetOdaActivity,"pdf Seçtiniz",Toast.LENGTH_SHORT).show()
+                                var intent = Intent(Intent.ACTION_GET_CONTENT)
+                                intent.setType("application/pdf")
+                                startActivityForResult(Intent.createChooser(intent,"Select File"),300)
+                            }
+                        }
+
+                    })
+
+                    dialog.setNegativeButton("Iptal",object : DialogInterface.OnClickListener{
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            dialog!!.cancel()
+                        }
+
+                    })
+
+                    dialog.show()
+                }
+            }else{
+                rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
+                var items = arrayOf<CharSequence>(
+                    "Fotograf Seç",
+                    "Pdf Seç"
+                )
+                var dialog = AlertDialog.Builder(this)
+                dialog.setTitle("Belge Türü Seçiniz")
+                dialog.setItems(items,object :DialogInterface.OnClickListener{
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        if (which ==0){
+                            Toast.makeText(this@SohbetOdaActivity,"Resim Seçtiniz",Toast.LENGTH_SHORT).show()
+                            var intent = Intent(Intent.ACTION_GET_CONTENT)
+                            intent.type = "image/*"
+                            startActivityForResult(intent,100)
+                        }else{
+                            Toast.makeText(this@SohbetOdaActivity,"pdf Seçtiniz",Toast.LENGTH_SHORT).show()
+                            var intent = Intent(Intent.ACTION_GET_CONTENT)
+                            intent.setType("application/pdf")
+                            startActivityForResult(Intent.createChooser(intent,"Select File"),300)
+                        }
                     }
-                }
 
-            })
+                })
 
-            dialog.setNegativeButton("Iptal",object : DialogInterface.OnClickListener{
-                override fun onClick(dialog: DialogInterface?, which: Int) {
-                    dialog!!.cancel()
-                }
+                dialog.setNegativeButton("Iptal",object : DialogInterface.OnClickListener{
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        dialog!!.cancel()
+                    }
 
-            })
+                })
 
-            dialog.show()
+                dialog.show()
+            }
+
+
+
+
 
 
 
@@ -147,6 +229,49 @@ companion object {
 
 
 
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when(requestCode){
+            100 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    rvMesaj.scrollToPosition(mAdapter!!.itemCount-1)
+                    var items = arrayOf<CharSequence>(
+                        "Fotograf Seç",
+                        "Pdf Seç"
+                    )
+                    var dialog = AlertDialog.Builder(this)
+                    dialog.setTitle("Belge Türü Seçiniz")
+                    dialog.setItems(items,object :DialogInterface.OnClickListener{
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            if (which ==0){
+                                Toast.makeText(this@SohbetOdaActivity,"Resim Seçtiniz",Toast.LENGTH_SHORT).show()
+                                var intent = Intent(Intent.ACTION_GET_CONTENT)
+                                intent.type = "image/*"
+                                startActivityForResult(intent,100)
+                            }else{
+                                Toast.makeText(this@SohbetOdaActivity,"pdf Seçtiniz",Toast.LENGTH_SHORT).show()
+                                var intent = Intent(Intent.ACTION_GET_CONTENT)
+                                intent.setType("application/pdf")
+                                startActivityForResult(Intent.createChooser(intent,"Select File"),300)
+                            }
+                        }
+
+                    })
+
+                    dialog.setNegativeButton("Iptal",object : DialogInterface.OnClickListener{
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            dialog!!.cancel()
+                        }
+
+                    })
+
+                    dialog.show()
+                }else {
+                    Toast.makeText(this@SohbetOdaActivity,"İzinleri Onaylamalısınız",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -224,6 +349,79 @@ companion object {
 
                 ref.child(yenimesajID!!)
                     .setValue(kaydedilecekMesaj)
+
+                //
+                var retrofit = Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+
+                var myInterface = retrofit.create(FCMINterface::class.java)
+
+                var headers = HashMap<String,String>()
+                headers.put("Content-Type","application/json")
+                headers.put("Authorization","key="+SERVER_KEY)
+
+
+                var reference = FirebaseDatabase.getInstance().reference
+                    .child("sohbet_odasi")
+                    .child(secilenSohbetOdaID)
+                    .child("sohbet_odasindaki_kullanicilar")
+                    .orderByKey()
+                    .addListenerForSingleValueEvent(object : ValueEventListener{
+                        override fun onCancelled(p0: DatabaseError) {
+
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            for (kullanici in p0.children){
+
+                                var kullaniciID = kullanici.key
+                                if (!kullaniciID.equals(FirebaseAuth.getInstance().currentUser?.uid)){
+                                    var newRef = FirebaseDatabase.getInstance().reference
+                                        .child("kullanici")
+                                        .orderByKey()
+                                        .equalTo(kullaniciID)
+                                        .addListenerForSingleValueEvent(object : ValueEventListener{
+                                            override fun onCancelled(p0: DatabaseError) {
+
+                                            }
+
+                                            override fun onDataChange(p0: DataSnapshot) {
+                                                var istenilenSatir = p0.children.iterator().next()
+                                                var token = istenilenSatir.getValue(Kullanici::class.java)?.mesaj_token
+
+                                                var data = FCMModel.Data("Yeni Mesaj Var","Resim","sohbet",secilenSohbetOdaID)
+                                                var to = token
+
+                                                var bildirim : FCMModel = FCMModel(to!!,data)
+
+                                                var istek = myInterface.bildirimGonder(headers,bildirim)
+                                                istek.enqueue(object : Callback<Response<FCMModel>>{
+                                                    override fun onFailure(call: Call<Response<FCMModel>>, t: Throwable) {
+                                                        Log.e("RETROFIT","HATA: "+ t.message)
+                                                    }
+
+                                                    override fun onResponse(call: Call<Response<FCMModel>>, response: Response<Response<FCMModel>>) {
+                                                        Log.e("RETROFIT","Başarılı: "+ response.toString())
+                                                    }
+
+                                                })
+
+
+
+                                            }
+
+                                        })
+                                }
+                            }
+                        }
+
+                    })
+
+
+
+                //
             }
         }
     }
@@ -285,6 +483,80 @@ companion object {
                 ref.child(yenimesajID!!)
                     .setValue(kaydedilecekMesaj)
 
+
+                //
+                var retrofit = Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+
+                var myInterface = retrofit.create(FCMINterface::class.java)
+
+                var headers = HashMap<String,String>()
+                headers.put("Content-Type","application/json")
+                headers.put("Authorization","key="+SERVER_KEY)
+
+
+                var reference = FirebaseDatabase.getInstance().reference
+                    .child("sohbet_odasi")
+                    .child(secilenSohbetOdaID)
+                    .child("sohbet_odasindaki_kullanicilar")
+                    .orderByKey()
+                    .addListenerForSingleValueEvent(object : ValueEventListener{
+                        override fun onCancelled(p0: DatabaseError) {
+
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            for (kullanici in p0.children){
+
+                                var kullaniciID = kullanici.key
+                                if (!kullaniciID.equals(FirebaseAuth.getInstance().currentUser?.uid)){
+                                    var newRef = FirebaseDatabase.getInstance().reference
+                                        .child("kullanici")
+                                        .orderByKey()
+                                        .equalTo(kullaniciID)
+                                        .addListenerForSingleValueEvent(object : ValueEventListener{
+                                            override fun onCancelled(p0: DatabaseError) {
+
+                                            }
+
+                                            override fun onDataChange(p0: DataSnapshot) {
+                                                var istenilenSatir = p0.children.iterator().next()
+                                                var token = istenilenSatir.getValue(Kullanici::class.java)?.mesaj_token
+
+                                                var data = FCMModel.Data("Yeni Mesaj Var","PDF","sohbet",secilenSohbetOdaID)
+                                                var to = token
+
+                                                var bildirim : FCMModel = FCMModel(to!!,data)
+
+                                                var istek = myInterface.bildirimGonder(headers,bildirim)
+                                                istek.enqueue(object : Callback<Response<FCMModel>>{
+                                                    override fun onFailure(call: Call<Response<FCMModel>>, t: Throwable) {
+                                                        Log.e("RETROFIT","HATA: "+ t.message)
+                                                    }
+
+                                                    override fun onResponse(call: Call<Response<FCMModel>>, response: Response<Response<FCMModel>>) {
+                                                        Log.e("RETROFIT","Başarılı: "+ response.toString())
+                                                    }
+
+                                                })
+
+
+
+                                            }
+
+                                        })
+                                }
+                            }
+                        }
+
+                    })
+
+
+
+                //
+
             }
         }
     }
@@ -313,6 +585,9 @@ companion object {
                 ref.child(yenimesajID!!)
                     .setValue(kaydedilecekMesaj)
 
+                Mesaj = etMesaj.text.toString()
+                msg = etMesaj.text.toString()
+                etMesaj.setText("")
 
 
                 var retrofit = Retrofit.Builder()
@@ -355,7 +630,7 @@ companion object {
                                                 var istenilenSatir = p0.children.iterator().next()
                                                 var token = istenilenSatir.getValue(Kullanici::class.java)?.mesaj_token
 
-                                                var data = FCMModel.Data("Yeni Mesaj Var",etMesaj.text.toString(),"sohbet",secilenSohbetOdaID)
+                                                var data = FCMModel.Data("Yeni Mesaj Var",Mesaj!!,"sohbet",secilenSohbetOdaID)
                                                 var to = token
 
                                                 var bildirim : FCMModel = FCMModel(to!!,data)
@@ -371,7 +646,7 @@ companion object {
                                                     }
 
                                                 })
-                                                etMesaj.setText("")
+                                                Mesaj = ""
 
 
                                             }
@@ -394,9 +669,19 @@ companion object {
         return sdf.format(Date())
     }
 
+    private fun bildirimPendingIntent(){
+        var gelenIntent = intent
+
+        if (intent.hasExtra("sohbet_odasi_id_bildirim")){
+            secilenSohbetOdaID = intent.getStringExtra("sohbet_odasi_id_bildirim")
+            MesajListener()
+        }
+    }
+
     private fun SohbetOdasiIDGetir() {
         var mainAct = intent.getStringExtra("sohbetodasi_id")
-
+        var karsiKisi = intent.getStringExtra("karsi")
+        var olusturan = intent.getStringExtra("olusturan")
 
 
 
@@ -404,6 +689,13 @@ companion object {
             secilenSohbetOdaID = intent.getStringExtra("sohbetodasi_id")
         }else if (intent.hasExtra("kullanicidanGelen") != null ){
             secilenSohbetOdaID =  intent.getStringExtra("kullanicidanGelen")
+        }
+
+
+        if(karsiKisi != null && karsiKisi != FirebaseAuth.getInstance().currentUser?.uid){
+            UserTitle = karsiKisi
+        } else if (olusturan != null && olusturan != FirebaseAuth.getInstance().currentUser?.uid){
+            UserTitle = olusturan
         }
 
         Log.e("IDdogTest",secilenSohbetOdaID)
@@ -420,7 +712,7 @@ companion object {
 
         override fun onDataChange(p0: DataSnapshot) {
             sohbetOdaMesajlarGetir()
-            rvMesaj.smoothScrollToPosition(mAdapter!!.itemCount-1)
+            //rvMesaj.smoothScrollToPosition(mAdapter!!.itemCount-1)
             if (open) {
                 gorunenMesajSayisi(p0.childrenCount.toInt())
             }
@@ -481,6 +773,7 @@ companion object {
                                             var kulllanici = p0?.children.iterator().next()
                                             yeniMesaj.profil_resmi = kulllanici.getValue(Kullanici::class.java)!!.profil_resmi
                                             yeniMesaj.adi = kulllanici.getValue(Kullanici::class.java)!!.isim
+                                            Log.e("kisiadTest",yeniMesaj.adi)
 
                                             mAdapter!!.notifyDataSetChanged()
                                         }

@@ -21,7 +21,7 @@ class KullanicilarActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_kullanicilar)
-        supportActionBar?.setTitle("Ayarlar")
+        supportActionBar?.setTitle("Kullanıcılar")
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         kullaniciListener()

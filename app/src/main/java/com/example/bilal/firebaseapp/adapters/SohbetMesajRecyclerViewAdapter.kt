@@ -3,14 +3,10 @@ package com.example.bilal.firebaseapp.adapters
 import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.Context
-import android.content.Context.DOWNLOAD_SERVICE
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
-import android.support.v4.app.ActivityCompat.requestPermissions
-import android.support.v4.content.ContextCompat.checkSelfPermission
 import android.support.v4.content.ContextCompat.getSystemService
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
@@ -19,10 +15,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import com.example.bilal.firebaseapp.model.MetinMesaj
 import com.example.bilal.firebaseapp.R
 import com.example.bilal.firebaseapp.activity.DisplayActivity
+import com.example.bilal.firebaseapp.activity.DownloadActivity
 
 import com.google.firebase.auth.FirebaseAuth
 
@@ -156,7 +152,7 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
 
     }
 
-    class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+   inner class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var layout = itemView as FrameLayout
         var profilResim = layout.imgResimMesajSag
         var zaman = layout.textView_message_time_sag
@@ -173,13 +169,39 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
             zaman.text = oAnkiMesaj.zaman
 
 
+            profilResim.setOnLongClickListener {
+                var items = arrayOf<CharSequence>(
+                    "İndir"
+                )
+
+                var dialog = AlertDialog.Builder(myActivity)
+                dialog.setTitle("Belge")
+                dialog.setItems(items,object : DialogInterface.OnClickListener{
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        if (which ==0){
+
+                            var intent = Intent(myActivity, DownloadActivity::class.java)
+                            intent.putExtra("linkDownload",oAnkiMesaj.mesaj)
+                            myActivity.startActivity(intent)
+
+                        }
+
+                    }
+
+                })
+                dialog.show()
+
+                return@setOnLongClickListener true
+            }
+
+
 
         }
 
     }
 
 
-    class ImageViewHolder2(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ImageViewHolder2(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var layout = itemView as FrameLayout
         var profilResim = layout.imgResimMesajSol
         var zaman = layout.textView_message_time_sol
@@ -194,6 +216,31 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
                 Picasso.get().load(path).into(profilResim)
             }
             zaman.text = oAnkiMesaj.zaman
+
+            profilResim.setOnLongClickListener {
+                var items = arrayOf<CharSequence>(
+                    "İndir"
+                )
+
+                var dialog = AlertDialog.Builder(myActivity)
+                dialog.setTitle("Belge")
+                dialog.setItems(items,object : DialogInterface.OnClickListener{
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        if (which ==0){
+
+                            var intent = Intent(myActivity, DownloadActivity::class.java)
+                            intent.putExtra("linkDownload",oAnkiMesaj.mesaj)
+                            myActivity.startActivity(intent)
+
+                        }
+
+                    }
+
+                })
+                dialog.show()
+
+                return@setOnLongClickListener true
+            }
 
 
 
@@ -230,6 +277,9 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
                                 intent.putExtra("link",oAnkiMesaj.mesaj)
                                 myActivity.startActivity(intent)
                             }else{
+                                var intent = Intent(myActivity, DownloadActivity::class.java)
+                                intent.putExtra("linkDownload",oAnkiMesaj.mesaj)
+                                myActivity.startActivity(intent)
 
                             }
 
@@ -271,7 +321,10 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
                             intent.putExtra("link",oAnkiMesaj.mesaj)
                             myActivity.startActivity(intent)
                         }else{
-
+                            //downloadFile(oAnkiMesaj.mesaj)
+                            var intent = Intent(myActivity, DownloadActivity::class.java)
+                            intent.putExtra("linkDownload",oAnkiMesaj.mesaj)
+                            myActivity.startActivity(intent)
                         }
 
                     }
@@ -284,6 +337,25 @@ class SohbetMesajRecyclerViewAdapter(activity: AppCompatActivity, tumMejlar : Ar
             }
 
         }
+
+    }
+
+    private fun downloadFile(mesaj: String?) {
+
+        val url = mesaj
+
+        val request = DownloadManager.Request(Uri.parse(url))
+
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or  DownloadManager.Request.NETWORK_WIFI)
+        request.setTitle("Download")
+        request.setDescription("The File is Downloading ...")
+
+        request.allowScanningByMediaScanner()
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,"${System.currentTimeMillis()}")
+
+
 
     }
 

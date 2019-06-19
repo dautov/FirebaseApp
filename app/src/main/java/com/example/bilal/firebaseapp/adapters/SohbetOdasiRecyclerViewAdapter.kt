@@ -53,6 +53,7 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
         var sohbetOdasiAdi = tekSatirSohbetOdasi.tvSohbetAdi
         var sohbetOdasiMesajSayisi = tekSatirSohbetOdasi.tvMesajSayisi
         var sohbetOdasiResim = tekSatirSohbetOdasi.imgProfilResim
+        var circle = tekSatirSohbetOdasi.circlesohbet
         var sohbetOdasiSil= tekSatirSohbetOdasi.imgSohbetSil
 
 
@@ -61,6 +62,7 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
 
 
             sohbetOdasiMesajSayisi.text = (oAnOlusturulanSohbetOdasi.sohbet_oda_mesaj)?.size.toString()
+            sohbetOdasiOlusturan.text = "Sohbet"
 
             sohbetOdasiSil.setOnClickListener {
                 if (oAnOlusturulanSohbetOdasi.olusturan_id.equals(FirebaseAuth.getInstance().currentUser!!.uid)){
@@ -96,6 +98,8 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
                 var intent = Intent(myActivity,SohbetOdaActivity::class.java)
                 //tıklanan odanın ID sini SohbetOdaActvity ye yollar
                 intent.putExtra("sohbetodasi_id",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
+                intent.putExtra("karsi",oAnOlusturulanSohbetOdasi.karsi_kisi_id)
+                intent.putExtra("olusturan",oAnOlusturulanSohbetOdasi.olusturan_id)
                 Log.e("SecilenOdaID TEst",oAnOlusturulanSohbetOdasi.sohbetodasi_id)
                 myActivity.startActivity(intent)
 
@@ -114,13 +118,13 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
 
                     override fun onDataChange(p0: DataSnapshot) {
                         for (kullanici in p0.children){
-                            sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
+                            //sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
                             sohbetOdasiAdi.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
                             var profil = kullanici.getValue(Kullanici::class.java)!!.profil_resmi.toString()
                             if (profil.isNullOrEmpty() or profil.isNullOrBlank()){
-                                Picasso.get().load(R.drawable.ic_action_user).resize(72,72).into(sohbetOdasiResim)
+                                Picasso.get().load(R.drawable.ic_account_circle).into(circle)
                             }else{
-                                Picasso.get().load(profil).resize(72,72).into(sohbetOdasiResim)
+                                Picasso.get().load(profil).into(circle)
                             }
                         }
                     }
@@ -137,14 +141,14 @@ class SohbetOdasiRecyclerViewAdapter(mActivity: AppCompatActivity,tumSohbetOdala
 
                         override fun onDataChange(p0: DataSnapshot) {
                             for (kullanici in p0.children){
-                                sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
+                                //sohbetOdasiOlusturan.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
                                 sohbetOdasiAdi.text = kullanici.getValue(Kullanici::class.java)!!.isim.toString()
 
                                 var profil = kullanici.getValue(Kullanici::class.java)!!.profil_resmi.toString()
                                 if (profil.isNullOrEmpty() or profil.isNullOrBlank()){
-                                    Picasso.get().load(R.drawable.ic_action_user).resize(72,72).into(sohbetOdasiResim)
+                                    Picasso.get().load(R.drawable.ic_account_circle).into(circle)
                                 }else{
-                                    Picasso.get().load(profil).resize(72,72).into(sohbetOdasiResim)
+                                    Picasso.get().load(profil).into(circle)
                                 }
 
 

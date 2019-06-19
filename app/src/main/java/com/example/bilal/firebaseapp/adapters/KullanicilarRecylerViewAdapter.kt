@@ -61,6 +61,7 @@ class KullanicilarRecylerViewAdapter (myActivity: AppCompatActivity,tumKullanici
         var layout = itemView as ConstraintLayout
         var isim = layout.tvAdi
         var profilResim = layout.imgProfil
+        var circle = layout.circleOneUser
 
 
 
@@ -132,9 +133,9 @@ class KullanicilarRecylerViewAdapter (myActivity: AppCompatActivity,tumKullanici
             Log.e("NameInFor",isim.text.toString())
             var path = oAnkiKullanici.profil_resmi
             if (path.isNullOrEmpty() or path.isNullOrBlank()){
-                Picasso.get().load(R.drawable.ic_account_circle).into(profilResim)
+                Picasso.get().load(R.drawable.ic_account_circle).into(circle)
             }else {
-                Picasso.get().load(path).into(profilResim)
+                Picasso.get().load(path).into(circle)
             }
 
 
